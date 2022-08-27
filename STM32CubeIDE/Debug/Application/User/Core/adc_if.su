@@ -1,0 +1,6 @@
+C:/Users/Aleja/STM32CubeIDE/Workspace/LoRaWAN_End_Node/Core/Src/adc_if.c:195:17:ADC_ReadChannels	32	static
+C:/Users/Aleja/STM32CubeIDE/Workspace/LoRaWAN_End_Node/Core/Src/adc_if.c:78:6:Get_ADC_Measurement	16	static
+C:/Users/Aleja/STM32CubeIDE/Workspace/LoRaWAN_End_Node/Core/Src/adc_if.c:93:6:SYS_InitMeasurement	0	static
+C:/Users/Aleja/STM32CubeIDE/Workspace/LoRaWAN_End_Node/Core/Src/adc_if.c:104:6:SYS_DeInitMeasurement	0	static
+C:/Users/Aleja/STM32CubeIDE/Workspace/LoRaWAN_End_Node/Core/Src/adc_if.c:153:10:SYS_GetBatteryLevel	8	static
+C:/Users/Aleja/STM32CubeIDE/Workspace/LoRaWAN_End_Node/Core/Src/adc_if.c:111:9:SYS_GetTemperatureLevel	16	static
