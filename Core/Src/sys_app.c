@@ -257,15 +257,15 @@ uint32_t GetDevAddr(void)
 
 /* USER CODE BEGIN EF */
 
-//Funcion para medir con DHT11
+//Function to measure with DHT11 module
 void GetTemperatureAndhumidityLevel(uint16_t *Hum, int16_t *Temp){
 
-	float h,t;
+	float h,t; //Internal variables to store the measurement
 	DHT_DataTypedef DHT11_Data;
 	DHT_GetData(&DHT11_Data);
 	h = DHT11_Data.Humidity;
 	t = DHT11_Data.Temperature;
-	APP_LOG(TS_ON, VLEVEL_M, "Temp: %d Humid: %d\r\n",(int)t, (int)h);
+	APP_LOG(TS_ON, VLEVEL_M, "DHT11 Temp: %d\r\nDHT11 Humid: %d\r\n",(int)t, (int)h);
 	*Hum = (uint16_t)h;
 	*Temp = (int16_t)t;
 

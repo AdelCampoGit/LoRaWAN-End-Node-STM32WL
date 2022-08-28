@@ -66,6 +66,20 @@ typedef enum TxEventType_e
 
 /* USER CODE BEGIN PTD */
 
+/*
+ * Message content
+ */
+typedef enum MsgContent_e
+{
+	MSG_CONTENT_1,
+	MSG_CONTENT_2,
+	MSG_CONTENT_3
+}MsgContent_t;
+
+// Default message content
+
+MsgContent_t MsgContent = MSG_CONTENT_1;
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -505,22 +519,46 @@ static void OnRxData(LmHandlerAppData_t *appData, LmHandlerRxParams_t *params)
               }
               break;
             case LORAWAN_USER_APP_PORT:
+
               if (appData->BufferSize == 1)
               {
                 AppLedStateOn = appData->Buffer[0] & 0x01;
                 if (AppLedStateOn == RESET)
                 {
                   APP_LOG(TS_OFF, VLEVEL_H, "LED OFF\r\n");
-                  HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET); /* LED_RED */
+                  //HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET); /* LED_RED */
                 }
                 else
                 {
                   APP_LOG(TS_OFF, VLEVEL_H, "LED ON\r\n");
-                  HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET); /* LED_RED */
+                  //HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET); /* LED_RED */
                 }
               }
               break;
+            case 4:
 
+			if (appData->BufferSize == 1)
+			{
+			  APP_LOG(TS_OFF, VLEVEL_M, "SWITCHED TO MSG CONTENT 1\r\n");
+			  MsgContent = MSG_CONTENT_1;
+			}
+			break;
+            case 5:
+
+			if (appData->BufferSize == 1)
+			{
+			  APP_LOG(TS_OFF, VLEVEL_M, "SWITCHED TO MSG CONTENT 2\r\n");
+			  MsgContent = MSG_CONTENT_2;
+			}
+			break;
+            case 6:
+
+			if (appData->BufferSize == 1)
+			{
+			  APP_LOG(TS_OFF, VLEVEL_M, "SWITCHED TO MSG CONTENT 3\r\n");
+			  MsgContent = MSG_CONTENT_3;
+			}
+			break;
             default:
 
               break;
@@ -546,31 +584,69 @@ static void SendTxData(void)
   UTIL_TIMER_Time_t nextTxIn = 0;
   uint32_t i = 0;
 
-  //Variables para almacenar el valor de lectura del DHT11
-  int16_t Temperature;
-  uint16_t Humidity;
-  //Variable para almacenar la lectura del LDR
-  uint8_t photoresistance[1];
 
-  //Funcion para medir con el LDR
-  Get_ADC_Measurement(ADC_CHANNEL_3, photoresistance);
-  //Funcion para medir con DHT11
-  GetTemperatureAndhumidityLevel(&Humidity, &Temperature);
+
+
+  switch (MsgContent){
+	case MSG_CONTENT_1: //All the content
+		{
+		  //Variable to storage LDR measurement
+		  uint8_t photoresistance[1];
+		  //Variables DHT11 measurement
+		  int16_t Temperature;
+		  uint16_t Humidity;
+
+		  //Function to measure LDR through ADC (Pin PB4)
+		  Get_ADC_Measurement(ADC_CHANNEL_3, photoresistance);
+		  AppData.Buffer[i++] = photoresistance[0];
+		  AppData.Buffer[i++] = photoresistance[1];
+
+		  //Function to measure DHT11 (Pin PB3)
+		  GetTemperatureAndhumidityLevel(&Humidity, &Temperature);
+
+		  //Including measures in buffer
+		  AppData.Buffer[i++] = (uint8_t)((Humidity >> 8) & 0xFF);
+		  AppData.Buffer[i++] = (uint8_t)(Humidity & 0xFF);
+		  AppData.Buffer[i++] = (uint8_t)(Temperature & 0xFF);
+
+		  //Choosing message Fport
+		  AppData.Port = LORAWAN_USER_APP_PORT; //	2
+	  break;
+		}
+	case MSG_CONTENT_2: //Just LDR
+		{
+		  uint8_t photoresistance[1];
+		  Get_ADC_Measurement(ADC_CHANNEL_3, photoresistance);
+		  AppData.Buffer[i++] = photoresistance[0];
+		  AppData.Buffer[i++] = photoresistance[1];
+		  AppData.Port = 4;
+	  break;
+		}
+	case MSG_CONTENT_3: //Just DHT11
+		{
+		  int16_t Temperature;
+		  uint16_t Humidity;
+		  GetTemperatureAndhumidityLevel(&Humidity, &Temperature);
+		  AppData.Buffer[i++] = (uint8_t)((Humidity >> 8) & 0xFF);
+		  AppData.Buffer[i++] = (uint8_t)(Humidity & 0xFF);
+		  AppData.Buffer[i++] = (uint8_t)(Temperature & 0xFF);
+		  AppData.Port = 5;
+	  break;
+		}
+  }
+
+
 
   EnvSensors_Read(&sensor_data);
 
   APP_LOG(TS_ON, VLEVEL_M, "VDDA: %d\r\n", batteryLevel);
   APP_LOG(TS_ON, VLEVEL_M, "temp: %d\r\n", (int16_t)(sensor_data.temperature));
 
-  //Selección del fport del mensaje
-  AppData.Port = LORAWAN_USER_APP_PORT;
+
 
 //AppData.Buffer[i++] = GetBatteryLevel();        /* 1 (very low) to 254 (fully charged) */
-  AppData.Buffer[i++] = photoresistance[0];
-  AppData.Buffer[i++] = photoresistance[1];
-  AppData.Buffer[i++] = (uint8_t)((Humidity >> 8) & 0xFF);
-  AppData.Buffer[i++] = (uint8_t)(Humidity & 0xFF);
-  AppData.Buffer[i++] = (uint8_t)(Temperature & 0xFF);
+
+
 
 
   AppData.BufferSize = i;
@@ -586,7 +662,7 @@ static void SendTxData(void)
   {
     APP_LOG(TS_ON, VLEVEL_L, "SEND REQUEST\r\n");
   }
-  else if (LORAMAC_HANDLER_DUTYCYCLE_RESTRICTED == status)
+  else if (LORAMAC_HANDLER_DUTYCYCLE_RESTRICTED == status) //Checking if Tx needs to wait
   {
     nextTxIn = LmHandlerGetDutyCycleWaitTime();
     if (nextTxIn > 0)

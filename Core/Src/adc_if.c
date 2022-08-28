@@ -74,18 +74,18 @@ static uint32_t ADC_ReadChannels(uint32_t channel);
 /* Exported functions --------------------------------------------------------*/
 /* USER CODE BEGIN EF */
 
-//Funcion para obtener medidas del ADC desde lora_app.c
+//Function to obtain ADC measurements from lora_app.c
 void Get_ADC_Measurement(uint32_t channel, uint8_t *v){
-	uint32_t a; // Variable interna para almacenar la lectura del ADC
+	uint32_t a; // Internal variable to store ADC measurement
 	a = ADC_ReadChannels(channel);
 
-	//El ADC como minimo genera medidas de 12 bits de resolucion, por lo que solo necesitamos los 16 bits menos significativos
+	//ADC minimal resolution used (12 bits) so we only need 16 less significant bits (Little Endian)
 	v[0] = a;
 	v[1] = a >>  8;
 //	v[2] = a >> 16;
 //	v[3] = a >> 24;
-	//Mostramos por terminal la lectura
-	APP_LOG(TS_ON, VLEVEL_M, "Luminosidad: %d\r\n", a);
+	//Displaying measurement by UART
+	APP_LOG(TS_ON, VLEVEL_M, "LDR: %d\r\n", a);
 
 }
 /* USER CODE END EF */
