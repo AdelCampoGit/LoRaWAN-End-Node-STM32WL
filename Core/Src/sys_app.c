@@ -157,23 +157,23 @@ uint8_t GetBatteryLevel(void)
   /* USER CODE BEGIN GetBatteryLevel_0 */
 
   /* USER CODE END GetBatteryLevel_0 */
-
   batteryLevelmV = (uint16_t) SYS_GetBatteryLevel();
 
   /* Convert battery level from mV to linear scale: 1 (very low) to 254 (fully charged) */
-  if (batteryLevelmV > VDD_BAT)
-  {
-    batteryLevel = LORAWAN_MAX_BAT;
-  }
-  else if (batteryLevelmV < VDD_MIN)
-  {
-    batteryLevel = 0;
-  }
-  else
-  {
-    batteryLevel = (((uint32_t)(batteryLevelmV - VDD_MIN) * LORAWAN_MAX_BAT) / (VDD_BAT - VDD_MIN));
-  }
+    if (batteryLevelmV > VDD_BAT)
+    {
+      batteryLevel = LORAWAN_MAX_BAT;
+    }
+    else if (batteryLevelmV < VDD_MIN)
+    {
+      batteryLevel = 0;
+    }
+    else
+    {
+      batteryLevel = (((uint32_t)(batteryLevelmV - VDD_MIN) * LORAWAN_MAX_BAT) / (VDD_BAT - VDD_MIN));
+    }
 
+    //APP_LOG(TS_ON, VLEVEL_M, "VDDA= %d\r\n", batteryLevel);
   /* USER CODE BEGIN GetBatteryLevel_2 */
 
   /* USER CODE END GetBatteryLevel_2 */

@@ -71,14 +71,14 @@ typedef enum TxEventType_e
  */
 typedef enum MsgContent_e
 {
+	MSG_CONTENT_0,
 	MSG_CONTENT_1,
-	MSG_CONTENT_2,
-	MSG_CONTENT_3
+	MSG_CONTENT_2
 }MsgContent_t;
 
 // Default message content
 
-MsgContent_t MsgContent = MSG_CONTENT_1;
+MsgContent_t MsgContent = MSG_CONTENT_0;
 
 /* USER CODE END PTD */
 
@@ -423,7 +423,7 @@ void LoRaWAN_Init(void)
 
   LmHandlerJoin(ActivationType, ForceRejoin);
 
-  if (EventType == TX_ON_TIMER)
+  if (EventType == TX_ON_EVENT)
   {
     /* send every time timer elapses */
     UTIL_TIMER_Create(&TxTimer, TxPeriodicity, UTIL_TIMER_ONESHOT, OnTxTimerEvent, NULL);
@@ -535,33 +535,29 @@ static void OnRxData(LmHandlerAppData_t *appData, LmHandlerRxParams_t *params)
                 }
               }
               break;
-            case 4:
+            case LORAWAN_SWITCH_MESSAGE_CONTENT_PORT:
 
 			if (appData->BufferSize == 1)
 			{
-			  APP_LOG(TS_OFF, VLEVEL_M, "SWITCHED TO MSG CONTENT 1\r\n");
-			  MsgContent = MSG_CONTENT_1;
+				switch (appData->Buffer[0])
+				{
+				case 0:
+					APP_LOG(TS_OFF, VLEVEL_M, "SWITCHED TO MSG CONTENT 1\r\n");
+					MsgContent = MSG_CONTENT_0;
+				break;
+				case 1:
+					APP_LOG(TS_OFF, VLEVEL_M, "SWITCHED TO MSG CONTENT 2\r\n");
+					MsgContent = MSG_CONTENT_1;
+				break;
+				case 2:
+					APP_LOG(TS_OFF, VLEVEL_M, "SWITCHED TO MSG CONTENT 3\r\n");
+					MsgContent = MSG_CONTENT_2;
+				break;
+				}
 			}
-			break;
-            case 5:
-
-			if (appData->BufferSize == 1)
-			{
-			  APP_LOG(TS_OFF, VLEVEL_M, "SWITCHED TO MSG CONTENT 2\r\n");
-			  MsgContent = MSG_CONTENT_2;
-			}
-			break;
-            case 6:
-
-			if (appData->BufferSize == 1)
-			{
-			  APP_LOG(TS_OFF, VLEVEL_M, "SWITCHED TO MSG CONTENT 3\r\n");
-			  MsgContent = MSG_CONTENT_3;
-			}
-			break;
             default:
-
-              break;
+            	APP_LOG(TS_OFF, VLEVEL_M, "DOWNLINK FPORT ERROR\r\n");
+            break;
           }
         }
       }
@@ -579,8 +575,8 @@ static void SendTxData(void)
 {
   /* USER CODE BEGIN SendTxData_1 */
   LmHandlerErrorStatus_t status = LORAMAC_HANDLER_ERROR;
-  uint8_t batteryLevel = GetBatteryLevel();
-  sensor_t sensor_data;
+  uint8_t BatteryLevel;
+//  sensor_t sensor_data;
   UTIL_TIMER_Time_t nextTxIn = 0;
   uint32_t i = 0;
 
@@ -588,7 +584,7 @@ static void SendTxData(void)
 
 
   switch (MsgContent){
-	case MSG_CONTENT_1: //All the content
+	case MSG_CONTENT_0: //Full content
 		{
 		  //Variable to storage LDR measurement
 		  uint8_t photoresistance[1];
@@ -613,7 +609,7 @@ static void SendTxData(void)
 		  AppData.Port = LORAWAN_USER_APP_PORT; //	2
 	  break;
 		}
-	case MSG_CONTENT_2: //Just LDR
+	case MSG_CONTENT_1: //Just LDR
 		{
 		  uint8_t photoresistance[1];
 		  Get_ADC_Measurement(ADC_CHANNEL_3, photoresistance);
@@ -622,7 +618,7 @@ static void SendTxData(void)
 		  AppData.Port = 4;
 	  break;
 		}
-	case MSG_CONTENT_3: //Just DHT11
+	case MSG_CONTENT_2: //Just DHT11
 		{
 		  int16_t Temperature;
 		  uint16_t Humidity;
@@ -634,13 +630,13 @@ static void SendTxData(void)
 	  break;
 		}
   }
+  // Getting the battery level
+  BatteryLevel = GetBatteryLevel();
+  AppData.Buffer[i++] = (uint8_t)(BatteryLevel);
 
+//  EnvSensors_Read(&sensor_data);
 
-
-  EnvSensors_Read(&sensor_data);
-
-  APP_LOG(TS_ON, VLEVEL_M, "VDDA: %d\r\n", batteryLevel);
-  APP_LOG(TS_ON, VLEVEL_M, "temp: %d\r\n", (int16_t)(sensor_data.temperature));
+//  APP_LOG(TS_ON, VLEVEL_M, "temp: %d\r\n", (int16_t)(sensor_data.temperature));
 
 
 
@@ -671,7 +667,7 @@ static void SendTxData(void)
     }
   }
 
-  if (EventType == TX_ON_TIMER)
+  if (EventType == TX_ON_EVENT)
   {
     UTIL_TIMER_Stop(&TxTimer);
     UTIL_TIMER_SetPeriod(&TxTimer, MAX(nextTxIn, TxPeriodicity));

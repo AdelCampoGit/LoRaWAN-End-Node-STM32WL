@@ -1,4 +1,4 @@
-#LoRaWAN End Node STM32WL
+#LoRaWAN End Node STM32WL#
 
 STM32WL55JC code for TFG SISTEMA DE MONITORIZACIÓN BASADO EN LORAWAN
-Based on STM32WL github repository
+Based on STM32CubeWL github repository

@@ -49,7 +49,7 @@ extern "C" {
 /*!
  * Defines the application data transmission duty cycle. 10s, value in [ms].
  */
-#define APP_TX_DUTYCYCLE                            60000
+#define APP_TX_DUTYCYCLE                            3600000
 
 /*!
  * LoRaWAN User application port
@@ -94,7 +94,7 @@ extern "C" {
  * LoRaWAN force rejoin even if the NVM context is restored
  * @note useful only when context management is enabled by CONTEXT_MANAGEMENT_ENABLED
  */
-#define LORAWAN_FORCE_REJOIN_AT_BOOT                false
+#define LORAWAN_FORCE_REJOIN_AT_BOOT                true
 
 /*!
  * User application data buffer size
@@ -119,7 +119,7 @@ extern "C" {
 #define LORAWAN_DEFAULT_CLASS_B_C_RESP_TIMEOUT      8000
 
 /* USER CODE BEGIN EC */
-
+#define LORAWAN_SWITCH_MESSAGE_CONTENT_PORT			4
 /* USER CODE END EC */
 
 /* Exported macros -----------------------------------------------------------*/
